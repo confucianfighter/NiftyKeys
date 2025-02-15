@@ -127,12 +127,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CharToVK.cpp" />
+    <ClCompile Include="InputSimulator.cpp" />
+    <ClCompile Include="KeyState.cpp" />
+    <ClCompile Include="ModeManager.cpp" />
     <ClCompile Include="test_mouse_input.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\daylan\test_mouse_input\test_mouse_input;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Downloads\json.hpp" />
+    <ClInclude Include="CharToVK.h" />
+    <ClInclude Include="InputSimulator.h" />
+    <ClInclude Include="KeyState.h" />
+    <ClInclude Include="ModeManager.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +148,7 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <None Include="modes.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

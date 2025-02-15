@@ -18,6 +18,18 @@
     <ClCompile Include="test_mouse_input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ModeManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CharToVK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputSimulator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Downloads\json.hpp">
@@ -26,9 +38,22 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ModeManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CharToVK.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputSimulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="modes.json" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="test_mouse_input.rc">
