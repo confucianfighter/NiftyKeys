@@ -4,7 +4,7 @@
 #include "KeyState.h"
 #include "CharToVK.h"
 #include "InputSimulator.h"
-#include "test_mouse_input.cpp"
+#include "SpaceMode.h"
 // Define the static activationMap using VK codes as keys.
 std::vector<Mode *> Mode::modes;
 int timeout = 200;
@@ -19,54 +19,64 @@ Mode::Mode(
     // converting each key (if needed) to its corresponding VK code.
     // Since activationKeys are already ints (VK codes), this step might be redundant,
     // but if CharToVK needs to be applied, you can do so.
-    for (int key : activationKeys)
-    {
-        // For demonstration, assume key is already a VK code.
-        modes[key] = this;
-    }
 }
-
-bool Mode::handleKeyUpEvent(int keycode)
-{
-    bool handled = false;
-    // check if the keycode is in the keyMapping.
-    auto it = keyMapping.find(keycode);
-
-    if (it != keyMapping.end())
-    {
-        std::lock_guard<std::mutex> lock(keyStatesMutex);
-        auto it = keyStates.find(keycode);
-        KeyState state = it->second;
-        state.timeReleased = GetTickCount64();
-        state.held = false;
-        std::cout << "Key down: " << keycode << " remapped to " << it->first << std::endl;
-        handled = true;
-    }
-    // Additional logic for key up events can go here.
-    return handled;
-}
-
 bool Mode::handleKeyDownEvent(int keycode)
 {
     bool handled = false;
     // check if this is the activation key.
     if (keycode == keyCodeActivatedBy)
     {
-        return;
-    }
-    auto key = keyMapping.find(keycode);
-    if (key != keyMapping.end())
-    {
-        std::lock_guard<std::mutex> lock(keyStatesMutex);
-        auto it = keyStates.find(keycode);
-        KeyState state = it->second;
-        state.timePressed = GetTickCount64();
-        state.held = true;
-        InputSimulator::simulateKeyTap(key->second);
-        std::cout << "Key down: " << keycode << " remapped to " << it->first << std::endl;
         handled = true;
     }
-    // Additional logic for key down events can go here.
+    else
+    {
+        // Use the unordered_map's find() method.
+        auto mappingIt = keyMapping.find(keycode);
+        bool doSimulateKey = false;
+        if (mappingIt != keyMapping.end())
+        {
+            std::lock_guard<std::mutex> lock(keyStatesMutex);
+            // Ensure the key exists in keyStates; if not, add a default KeyState.
+            if (keyStates.find(keycode) == keyStates.end())
+            {
+                keyStates[keycode] = KeyState();
+            }
+            if (keyStates[keycode].held != true)
+            {
+                doSimulateKey = true;
+                keyStates[keycode].timePressed = GetTickCount64();
+                keyStates[keycode].held = true;
+                // mappingIt->second is the remapped key (an int)
+                // unlock the mutex
+                std::cout << "Key down: " << keycode << " remapped to " << mappingIt->second << std::endl;
+            }
+            handled = true;
+        }
+        if (doSimulateKey) {
+            InputSimulator::simulateKeyTap(mappingIt->second);
+        }
+    }
+    return handled;
+}
+
+bool Mode::handleKeyUpEvent(int keycode)
+{
+    bool handled = false;
+    // Use the unordered_map's find() method to check for a key mapping.
+    auto mappingIt = keyMapping.find(keycode);
+    if (mappingIt != keyMapping.end())
+    {
+        std::lock_guard<std::mutex> lock(keyStatesMutex);
+        // Make sure the key exists in keyStates before accessing.a
+        if (keyStates.find(keycode) == keyStates.end())
+        {
+            keyStates[keycode] = KeyState();
+        }
+        keyStates[keycode].timeReleased = GetTickCount64();
+        keyStates[keycode].held = false;
+        std::cout << "Key up: " << keycode << " remapped to " << mappingIt->second << std::endl;
+        handled = true;
+    }
     return handled;
 }
 
@@ -118,6 +128,7 @@ std::vector<Mode *> Mode::loadModes(const std::string &filename)
                     std::string keyStr = keyVal.get<std::string>();
                     if (!keyStr.empty())
                     {
+                        std::cout << "found activation key: " << keyStr << " for " << modeName << std::endl;
                         int vk = CharToVK(keyStr[0]);
                         activationKeys.push_back(vk);
                     }
@@ -126,14 +137,20 @@ std::vector<Mode *> Mode::loadModes(const std::string &filename)
 
             // Read key mapping and convert both keys and mapped values.
             std::unordered_map<int, int> keyMapping;
-            if (modeEntry.contains("key_mapping") && modeEntry["key_mapping"].is_object())
+            if (modeEntry.contains("key_mapping"))
+                std::cout << "key_mapping: " << modeEntry["key_mapping"] << std::endl;
+            if (modeEntry.contains("key_mapping"))
             {
+                std::cout << "Found key_mapping for " << modeName << ", about to iterate over it" << std::endl;
                 for (auto it = modeEntry["key_mapping"].begin(); it != modeEntry["key_mapping"].end(); ++it)
                 {
-                    std::string src = it.key();
+                    std::string src = it.key(); // it.key() already returns a std::string, so no need to call get()
+                    std::cout << "src: " << src << std::endl;
                     std::string dest = it.value().get<std::string>();
+                    std::cout << "dest: " << dest << std::endl;
                     if (!src.empty() && !dest.empty())
                     {
+                        std::cout << "Mapping " << src << " to " << dest << std::endl;
                         int srcVK = CharToVK(src[0]);
                         int destVK = CharToVK(dest[0]);
                         keyMapping[srcVK] = destVK;
@@ -149,6 +166,9 @@ std::vector<Mode *> Mode::loadModes(const std::string &filename)
     {
         std::cerr << "Error parsing modes JSON: " << e.what() << std::endl;
     }
+    // add Space mode
+    Mode *spaceMode = new SpaceMode("Mouse Mode", {{VK_SPACE, VK_SPACE}}, {{VK_SPACE}});
+    modes.push_back(spaceMode);
     return modes;
 }
 
@@ -175,19 +195,25 @@ bool Mode::checkActiveModeEnded(int vkCode)
     }
     return handled;
 }
+
 bool Mode::checkIfActivatesMode(int vkCode)
 {
+
     bool handled = false;
-    for (Mode *mode : Mode::modes)
+    if (Mode::currentMode == nullptr)
     {
-        auto it = std::find(mode->activationKeys.begin(), mode->activationKeys.end(), vkCode);
-        if (it != mode->activationKeys.end())
+        for (Mode *mode : Mode::modes)
         {
-            Mode::currentMode = mode;
-            Mode::currentMode->keyCodeActivatedBy = vkCode;
-            handled = true;
+            auto it = std::find(mode->activationKeys.begin(), mode->activationKeys.end(), vkCode);
+            if (it != mode->activationKeys.end())
+            {
+                Mode::currentMode = mode;
+                Mode::currentMode->keyCodeActivatedBy = vkCode;
+                handled = true;
+            }
         }
     }
 
     return handled;
 }
+void Mode::Update() {}
