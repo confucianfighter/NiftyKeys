@@ -29,22 +29,25 @@ public:
 
     // A static dictionary mapping each activation key to a Mode pointer.
     // If a mode has more than one activation key, each is a key in this dictionary.
-    static std::unordered_map<int, Mode*> activationMap;
+    static std::vector<Mode*> modes;
     
 
     // Static method that loops through the activationMap and checks
     // if that key is currently held down. 'keyStates' is a dictionary (from your main code)
     // mapping a key (char) to a bool indicating whether the key is currently held.
     // Returns a pointer to the active Mode, or nullptr if none.
-    static Mode* checkActiveMode(const std::unordered_map<int, KeyState>& keyStates);
     // In Mode.h, add the declaration:
-    void handleKeyUpEvent(int keycode);
-    void handleKeyDownEvent(int keycode);
+    static bool checkIfActivatesMode(int vkCode);
+    static bool checkActiveModeEnded(int vkCode);
+    bool handleKeyUpEvent(int keycode);
+    bool handleKeyDownEvent(int keycode);
+    int keyCodeActivatedBy;
+    static Mode* currentMode;
+    std::vector<int> activationKeys;
 
 private:
     std::string name;
     std::unordered_map<int, int> keyMapping;
-    std::vector<int> activationKeys;
 
     // Optionally, you can add more fields if needed.
 };

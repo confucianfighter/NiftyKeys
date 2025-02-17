@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -131,6 +131,7 @@
     <ClCompile Include="InputSimulator.cpp" />
     <ClCompile Include="KeyState.cpp" />
     <ClCompile Include="ModeManager.cpp" />
+    <ClCompile Include="SpaceMode.cpp" />
     <ClCompile Include="test_mouse_input.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\daylan\test_mouse_input\test_mouse_input;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -142,6 +143,7 @@
     <ClInclude Include="KeyState.h" />
     <ClInclude Include="ModeManager.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SpaceMode.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="config.json">
